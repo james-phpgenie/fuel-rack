@@ -50,7 +50,7 @@ class Rack
 		
 		// check for an auth token, if we don't have it 
 		// then check for the auth user and key
-		if (empy(\Config::get('auth-token', null))) {
+		if (empty($config['auth-token'])) {
 			
 			// we have no key!
 			if (empty($config['auth-user']) || (empty($config['auth-user']))) {
