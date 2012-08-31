@@ -26,6 +26,18 @@ return array(
 	 * set to the UK address.
 	 **/
 	 'api-url' => 'https://lon.auth.api.rackspacecloud.com/v1.0',
+	 
+ 	/**
+ 	 * auth-user
+ 	 * The username of the user for Rackspace
+ 	 **/
+ 	 'auth-user' => '',
+	 
+ 	/**
+ 	 * auth-key
+ 	 * The key provided by Rackspace that's linked to the above username
+ 	 **/
+ 	 'auth-key' => '',
 	
 	/**
 	 * auth-token
