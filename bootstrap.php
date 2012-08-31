@@ -14,6 +14,7 @@ Autoloader::add_core_namespace('Rack');
 Autoloader::add_classes(
 	array(
 		'Rack\\Rack'	=> __DIR__.'/classes/rack.php',
+		'Request_Curl' => __DIR__.'/classes/curl.php',
 	)		
 );
 

@@ -13,11 +13,6 @@ namespace Rack;
  
 class Rack
 {
-	// set up vars used for curl requests
-	private $headers = array();
-	private $options = array();
-	private $params = array();
-	
 	/**
 	 * @var string The auth username provided by Rackspace
 	 **/
@@ -39,6 +34,18 @@ class Rack
 	protected static $auth_token = '';
 	
 	/**
+	 * @var string The storage url to use
+	 **/
+	protected static $storage_url = '';
+	
+	/**
+	 * @var string The url used for managing the cdn.
+	 **/
+	protected static $cdn_management = '';
+	
+	private function __construct() { }
+	
+	/**
 	 * A static constructor that's called by the 
 	 * autoloader.
 	 **/
@@ -47,6 +54,17 @@ class Rack
 		
 		// load the configuration
 		$config = \Config::load('rack');
+		
+		// check that we have a url to use
+		if (empty($config['api-url'])) {
+			
+			throw new \FuelException('No api url given.');
+			
+		} else {
+			
+			static::$api_url = \Config::get('api-url');
+			
+		}
 		
 		// check for an auth token, if we don't have it 
 		// then check for the auth user and key
@@ -63,22 +81,118 @@ class Rack
 				static::$auth_user = \Config::get('auth-user');
 				static::$auth_key = \Config::get('auth-key');
 				
+				static::$auth_token = static::get_auth_token();
+				
 			}
 			
+		} else {
+			
+			static::$auth_user = \Config::get('auth-user');
+			static::$auth_key = \Config::get('auth-key');
+			static::$auth_token = \Config::get('auth-token');
+			
+			// check that the auth-token is valid
+			if ( ! static::is_auth_token_valid()) {
+				static::$auth_token = static::get_auth_token();
+			}
+						
 		}
 		
 	}
 	
 	/**
+	 * A private function for checking whether the auth token
+	 * is still valid or whether it has expired.
+	 *
+	 * @return boolean The outcome of the check
+	 **/
+	private static function is_auth_token_valid()
+	{
+		// check whether the auth_token is valid
+		// if a 401 is returned then we know it's not valid
+		
+		$auth_user = static::$auth_user;
+		$auth_key = static::$auth_key;
+		$api_url = static::$api_url;
+		
+		$headers = array(
+			'X-Auth-Key: '.$auth_key,
+			'X-Auth-User: '.$auth_user,
+		);
+		
+		$options = array(
+			'HEADER' => true, // we want to include the header in the ouput
+			'HTTPHEADER' => $headers,
+			'RETURNTRANSFER' => true,
+		);
+		
+		$request = \Request::forge($api_url, 
+			array(
+				'driver' => 'curl', 
+				'options' => $options
+			), 
+			'GET'
+		);
+		
+		$response = $request->execute()->response();
+		
+		if ($response->headers['X-Auth-Token'] === \Config::get('auth-token')) {
+			// we have a match
+			return true;
+			
+		}
+		
+		return false;
+	}
+	
+	/**
 	 * Authenticates using the user credentials.
-	 * 
-	 * @param string auth_user The username of the user.
-	 * @param string auth_key	The authorisation key.
 	 * 
 	 * @return string auth_token Returns the authorisation token.
 	 **/
-	public function authenticate()
+	private static function get_auth_token()
 	{
+		$auth_user = static::$auth_user;
+		$auth_key = static::$auth_key;
+		$api_url = static::$api_url;
+		
+		$headers = array(
+			'X-Auth-Key: '.$auth_key,
+			'X-Auth-User: '.$auth_user,
+		);
+		
+		$options = array(
+			'HEADER' => true, // we want to include the header in the ouput
+			'HTTPHEADER' => $headers,
+			'RETURNTRANSFER' => true,
+		);
+		
+		$request = \Request::forge($api_url, 
+			array(
+				'driver' => 'curl', 
+				'options' => $options
+			), 
+			'GET'
+		);
+		
+		$response = $request->execute()->response();
+		
+		$auth_token = '';
+		$storage_url = '';
+		$cdn_management = '';
+		
+		if ($response->status == 204 || $response->status == 202) {
+			// all's good in the hood
+			
+			static::$auth_token = $response->headers['X-Auth-Token'];
+			static::$storage_url = $response->headers['X-Storage-Url'];
+			static::$cdn_management = $response->headers['X-CDN-Management-Url'];
+			
+			static::save_details_to_config();
+		
+		} else {
+			throw new \FuelException('Please chack the auth-key and auth-user supplied.');
+		}
 	}
 	
 	/**
@@ -91,7 +205,52 @@ class Rack
 	 * @return void
 	 * @author James Pudney
 	 **/
-	public function get_containers($limit = null, $marker = '', $format = '')
+	public static function get_containers($limit = 10000, $marker = '', $format = 'json')
 	{
+		$headers = array(
+			'X-Auth-Token: '.$auth_token
+		);
+		
+		$params = array(
+			'limit' => $limit,
+			'marker' => $marker,
+			'format' => $format,
+		);
+		
+		$options = array('HTTPHEADER' => $headers);
+		
+		$response = \Request::forge(
+			static::$storage_url, 
+			array(
+				'driver' => 'curl', 
+				'options' => $options,
+				'params' => $params,
+			), 
+			'GET'
+		);
+		
+		return $response->execute()->body();		
+		
+	}
+	
+	/**
+	 * Saves the auth details on urls to the applications config dir, if it's writeable
+	 **/
+	private static function save_details_to_config()
+	{
+		\Config::load('rack');
+		
+		\Config::set('rack', 
+			array(
+				'auth-user' => static::$auth_user,
+				'auth-key' => static::$auth_key,
+				'api-url' => static::$api_url,
+				'auth-token' => static::$auth_token,
+				'storage-url' => static::$storage_url,
+				'cdn-managment' => static::$cdn_management,				
+			)
+		);
+		
+		\Config::save('rack', 'rack');
 	}
 }
