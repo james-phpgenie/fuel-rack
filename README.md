@@ -1,7 +1,7 @@
 Rack
 ====
 
-**Version:** v0.0.6
+**Version:** v0.0.7
 
 Rack is a FuelPHP package to allow you to interact with Rackspaces api.
 
