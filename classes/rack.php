@@ -56,7 +56,7 @@ class Rack
 			if (empty($config['auth-user']) || (empty($config['auth-user']))) {
 				
 				// haven't got anything to go on, best throw an error!
-				throw new \Fuel_Exception('No auth-token found, and no details were provided to retrieve one.  Please provide an auth-user and auth-key or an auth-token.');
+				throw new \FuelException('No auth-token found, and no details were provided to retrieve one.  Please provide an auth-user and auth-key or an auth-token.');
 				
 			} else {
 				
