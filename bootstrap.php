@@ -9,7 +9,7 @@
  * @license    See LICENCE.md
  **/
 
-Autoloader::add_core_namespace('Rack');
+Autoloader::add_core_namespace('Rack', true);
 
 Autoloader::add_classer(
 	array(
