@@ -20,5 +20,19 @@
 
 return array(
 	
+	/**
+	 * api-url
+	 * This is the url used to access the Rackspace api.  By default this is 
+	 * set to the UK address.
+	 **/
+	 'api-url' => 'https://lon.auth.api.rackspacecloud.com/v1.0',
+	
+	/**
+	 * auth-token
+	 * This is retrieved from rackspace and we need it for most requests.
+	 * The token should last 24 hours so it makes sense to store it.
+	 **/
+	 'auth-token' => '',
+	 
 );
 
