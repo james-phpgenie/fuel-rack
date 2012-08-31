@@ -13,12 +13,61 @@ namespace Rack;
  
 class Rack
 {
+	// set up vars used for curl requests
+	private $headers = array();
+	private $options = array();
+	private $params = array();
+	
 	/**
-	 * Constructor for the Rack package.
-	 * Loads the config settings and set up the object.
+	 * @var string The auth username provided by Rackspace
 	 **/
-	public function __construct()
+	protected static $auth_user = '';
+	
+	/**
+	 * @var string The auth key provided by Rackspace
+	 **/
+	protected static $auth_key = '';
+	
+	/**
+	 * @var string The API url to be used
+	 **/
+	protected static $api_url = '';
+	
+	/**
+	 * @var string The _secret_ auth token
+	 **/
+	protected static $auth_token = '';
+	
+	/**
+	 * A static constructor that's called by the 
+	 * autoloader.
+	 **/
+	public static function _init()
 	{
+		
+		// load the configuration
+		$config = \Config::load('rack');
+		
+		// check for an auth token, if we don't have it 
+		// then check for the auth user and key
+		if (empy(\Config::get('auth-token', null))) {
+			
+			// we have no key!
+			if ((empty(\Config::get('auth-user', null))) || 
+					(empty(\Config::get('auth-key', null)))) {
+				
+				// haven't got anything to go on, best throw an error!
+				throw new \Fuel_Exception('No auth-token found, and no details were provided to retrieve one.  Please provide an auth-user and auth-key or an auth-token.');
+				
+			} else {
+				
+				static::$auth_user = \Config::get('auth-user');
+				static::$auth_key = \Config::get('auth-key');
+				
+			}
+			
+		}
+		
 	}
 	
 	/**
