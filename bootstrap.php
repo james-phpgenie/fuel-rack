@@ -11,7 +11,7 @@
 
 Autoloader::add_core_namespace('Rack');
 
-Autoloader::add_classer(
+Autoloader::add_classes(
 	array(
 		'Rack\\Rack'	=> __DIR__.'/classes/rack.php',
 	)		
