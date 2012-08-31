@@ -43,6 +43,8 @@ class Rack
 	 **/
 	protected static $cdn_management = '';
 	
+	private function __construct() { }
+	
 	/**
 	 * A static constructor that's called by the 
 	 * autoloader.
@@ -203,8 +205,31 @@ class Rack
 	 * @return void
 	 * @author James Pudney
 	 **/
-	public function get_containers($limit = 10000, $marker = '', $format = 'json')
+	public static function get_containers($limit = 10000, $marker = '', $format = 'json')
 	{
+		$headers = array(
+			'X-Auth-Token: '.$auth_token
+		);
+		
+		$params = array(
+			'limit' => $limit,
+			'marker' => $marker,
+			'format' => $format,
+		);
+		
+		$options = array('HTTPHEADER' => $headers);
+		
+		$response = \Request::forge(
+			static::$storage_url, 
+			array(
+				'driver' => 'curl', 
+				'options' => $options,
+				'params' => $params,
+			), 
+			'GET'
+		);
+		
+		return $response->execute()->body();		
 		
 	}
 	
