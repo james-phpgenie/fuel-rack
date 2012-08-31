@@ -53,8 +53,7 @@ class Rack
 		if (empy(\Config::get('auth-token', null))) {
 			
 			// we have no key!
-			if ((empty(\Config::get('auth-user', null))) || 
-					(empty(\Config::get('auth-key', null)))) {
+			if ((empty(\Config::get('auth-user'))) || (empty(\Config::get('auth-key')))) {
 				
 				// haven't got anything to go on, best throw an error!
 				throw new \Fuel_Exception('No auth-token found, and no details were provided to retrieve one.  Please provide an auth-user and auth-key or an auth-token.');
