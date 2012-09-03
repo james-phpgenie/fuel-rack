@@ -117,7 +117,7 @@ class Rack
 	 * A private function for checking whether the auth token
 	 * is still valid or whether it has expired.
 	 *
-	 * @return boolean The outcome of the check
+	 * @return 	boolean The outcome of the check
 	 **/
 	private static function is_auth_token_valid()
 	{
@@ -161,7 +161,7 @@ class Rack
 	/**
 	 * Authenticates using the user credentials.
 	 * 
-	 * @return string auth_token Returns the authorisation token.
+	 * @return 	string 	auth_token Returns the authorisation token.
 	 **/
 	private static function get_auth_token()
 	{
@@ -213,14 +213,13 @@ class Rack
 	}
 	
 	/**
-	 * The request function offers a helper method for the curl request
+	 * The request function offers a helper method for the curl request.
 	 * 
 	 * @param		array		headers		The headers to be used for the curl request
 	 * @param		array		options		The options to be used for the curl request
 	 * @param		array		params		The params to be encoded in the curl request
 	 * @param		string	url				The url to be used for the request
 	 * @param		string	method		The method to be used for the curl request, GET, POST, PUT, etc.
-	 * 
 	 * @return	mixed		Returns the response object
 	 * @throws	MissingURLException
 	 **/
@@ -257,58 +256,46 @@ class Rack
 	}
 	
 	/**
-	 * Returns a list of containers.  The maximum of 10,000 container names will be returned.
+	 * Returns a list of containers.  The maximum of 10,000 container names will be returned.  Parameters are to be passed in an array.
 	 * 
-	 * @param int $limit Limits the number of containers returned.
-	 * @param string $marker Returns object names greater in value than the specified marker. Only strings using UTF-8 encoding are valid.
-	 * @param string $format Specify either json or xml as the format for the returned values.  If left blank an array of strings will be returned.
+	 * @param 	int 		limit 		Limits the number of containers returned.
+	 * @param 	string 	marker 		Returns object names greater in value than the specified marker. Only strings using UTF-8 encoding are valid.
+	 * @param 	string 	format 		Specify either json or xml as the format for the returned values.  If left blank an array of strings will be returned.
 	 * @return mixed The response depends on the format.  By default this should be an array of container objects encoded using json.  The objects consists of the following attributes: name, count, bytes.
 	 **/
-	public static function get_containers($limit = 10000, $marker = '', $format = 'json')
+	public static function get_containers($params = array('limit' => 10000, 'marker' => '', 'format' => ''))
 	{
 		$headers = array(
 			'X-Auth-Token: '.static::$auth_token
 		);
 		
-		$params = array(
-			'limit' => $limit,
-			'marker' => $marker,
-			'format' => $format,
-		);
-		
 		$response = static::request($headers, array(), static::$storage_url, 'GET', $params);
 		
-		return $response->body();		
+		$body = $response->body();
+		
+		return ($params['format'] === '' ? explode("\n", $body, -1) : $body);		
 		
 	}
 	
 	/**
-	 * Returns a list of objects for a container
+	 * Returns a list of objects for a container.  Parameters are to be passed in an array.
 	 *
-	 * @return mixed The response body is returned.  The format of which depends on the format given.  If none then the reponse is json encoded by default.
+	 * @return 	mixed 	The response body is returned.  The format of which depends on the format given.  If none then the reponse is json encoded by default.
 	 **/
-	public static function get_objects_list($container = '', $params = array('limit' => 10000, 'marker' => '', 'prefix' => '', 'format' => 'json', 'path' => '', 'deliminator' => ''))
+	public static function get_objects_list($container = '', $params = array('limit' => 10000, 'marker' => '', 'prefix' => '', 'format' => '', 'path' => '', 'deliminator' => ''))
 	{
 		$headers = array(
 			'X-Auth-Token: '.static::$auth_token
 		);
 				
-		$params = array(
-			'limit' => $params['limit'],
-			'marker' => $params['marker'],
-			'prefix' => $params['prefix'],
-			'format' => $params['format'],
-			'path' => $params['path'],
-			'deliminator' => $params['deliminator']
-		);
-		
 		$url = static::$storage_url.'/'.$container;
 		
 		$response = static::request($headers, array(), $url, 'GET', $params);
 		
-		return $response->body();	
+		$body = $response->body();
+		
+		return ($params['format'] === '' ? explode("\n", $body, -1) : $body);	
 	}
-	
 	
 		
 	//----- Storage Object Methods - GET, PUT, DELETE, UPDATE -----//
