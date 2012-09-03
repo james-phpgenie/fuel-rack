@@ -10,7 +10,12 @@
  **/
  
 namespace Rack;
- 
+
+/**
+ * Exception for a missing url for a request.
+ **/
+class MissingURLException extends \FuelException {}
+
 class Rack
 {
 	/**
@@ -105,7 +110,7 @@ class Rack
 		}
 		
 		static::$storage_url = \Config::get('storage-url');
-		
+		static::$cdn_management = \Config::get('cdn-management');
 	}
 	
 	/**
@@ -208,12 +213,55 @@ class Rack
 	}
 	
 	/**
+	 * The request function offers a helper method for the curl request
+	 * 
+	 * @param		array		headers		The headers to be used for the curl request
+	 * @param		array		options		The options to be used for the curl request
+	 * @param		array		params		The params to be encoded in the curl request
+	 * @param		string	url				The url to be used for the request
+	 * @param		string	method		The method to be used for the curl request, GET, POST, PUT, etc.
+	 * 
+	 * @return	mixed		Returns the response object
+	 * @throws	MissingURLException
+	 **/
+	private static function request($headers = array(), $options = array(), $url = '', $method = 'GET', $params = array())
+	{
+		
+		if ($url === '') {
+			throw new MissingURLException("The url given is empty.");			
+		}
+		
+		$options['HTTPHEADER'] = $headers;
+		$options['TIMEOUT'] = 3; // timeout 3 seconds
+		
+		$request = \Request::forge(
+			$url, 
+			array(
+				'driver' => 'curl', 
+				'options' => $options,
+				'params' => $params
+			), 
+			$method
+		);
+		
+		try {
+			
+			$request->execute();
+			
+		} catch (Exception $e) {
+			
+		}
+		
+		return $request->response();
+		
+	}
+	
+	/**
 	 * Returns a list of containers.  The maximum of 10,000 container names will be returned.
 	 * 
 	 * @param int $limit Limits the number of containers returned.
 	 * @param string $marker Returns object names greater in value than the specified marker. Only strings using UTF-8 encoding are valid.
 	 * @param string $format Specify either json or xml as the format for the returned values.  If left blank an array of strings will be returned.
-	 *
 	 * @return mixed The response depends on the format.  By default this should be an array of container objects encoded using json.  The objects consists of the following attributes: name, count, bytes.
 	 **/
 	public static function get_containers($limit = 10000, $marker = '', $format = 'json')
@@ -228,21 +276,104 @@ class Rack
 			'format' => $format,
 		);
 		
-		$options = array('HTTPHEADER' => $headers);
-		
-		$response = \Request::forge(
-			static::$storage_url, 
-			array(
-				'driver' => 'curl', 
-				'options' => $options,
-				'params' => $params,
-			), 
-			'GET'
-		)->execute()->response();
+		$response = static::request($headers, array(), static::$storage_url, 'GET', $params);
 		
 		return $response->body();		
 		
 	}
+	
+	/**
+	 * Returns a list of objects for a container
+	 *
+	 * @return mixed The response body is returned.  The format of which depends on the format given.  If none then the reponse is json encoded by default.
+	 **/
+	public static function get_objects_list($container = '', $params = array('limit' => 10000, 'marker' => '', 'prefix' => '', 'format' => 'json', 'path' => '', 'deliminator' => ''))
+	{
+		$headers = array(
+			'X-Auth-Token: '.static::$auth_token
+		);
+				
+		$params = array(
+			'limit' => $params['limit'],
+			'marker' => $params['marker'],
+			'prefix' => $params['prefix'],
+			'format' => $params['format'],
+			'path' => $params['path'],
+			'deliminator' => $params['deliminator']
+		);
+		
+		$url = static::$storage_url.'/'.$container;
+		
+		$response = static::request($headers, array(), $url, 'GET', $params);
+		
+		return $response->body();	
+	}
+	
+	
+		
+	//----- Storage Object Methods - GET, PUT, DELETE, UPDATE -----//
+	
+	/**
+	 * get_object allows you to retrieve an object from a container.
+	 * 
+	 * @param		string		container		The name of the container where the object is being stored
+	 * @param		string		object			The name of the object to retrieve
+	 * @param		array			conditions	Headers for conditional Get Requests. If-Match, If-None-Match, etc.
+	 *
+	 * @return void
+	 * @author James Pudney
+	 **/
+	public static function get_object($container = '', $object = '', $conditions = array())
+	{
+		$headers = array(
+			'X-Auth-Token: '.static::$auth_token
+		);
+		
+		$params = array();
+		
+		foreach ($conditions as $key => $value) {
+			$param[$key] = $value;
+		}
+		
+		$url = static::$storage_url.'/'.$container.'/'.$object;
+		
+		$response = static::request($headers, array(), $url, 'GET', $params);
+		
+		return $response->body();	
+	}
+	
+	
+	
+	
+	//----- CDN Operations Methods ------//
+	
+	/**
+	 * undocumented function
+	 *
+	 * @return void
+	 * @author James Pudney
+	 **/
+	public static function get_cdn_containers($limit = 10000, $marker = '', $format = 'json', $enabled_only = false)
+	{
+		$headers = array(
+			'X-Auth-Token: '.static::$auth_token
+		);
+		
+		$params = array(
+			'limit' => $limit,
+			'marker' => $marker,
+			'format' => $format,
+			'enabled_only' => $enabled_only,
+		);
+		
+		$response = static::request($headers, array(), static::$cdn_management, 'GET', $params);
+		
+		return $response->body();		
+	}
+	
+	
+	
+	//------ General operations ------//
 	
 	/**
 	 * Saves the auth details on urls to the applications config dir, if it's writeable
