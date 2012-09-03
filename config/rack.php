@@ -3,10 +3,10 @@
  * Rack is a package used to interact with
  * the Rackspace Cloud Files API
  *
- * @package    Rack
- * @version    0.0.1
- * @author     James Pudney james@phpgenie.co.uk
- * @license    See LICENCE.md
+ * @package    	Rack
+ * @version			0.0.9
+ * @author     	James Pudney james@phpgenie.co.uk
+ * @license    	See LICENCE.md
  **/
 
 /**
@@ -41,10 +41,29 @@ return array(
 	
 	/**
 	 * auth-token
-	 * This is retrieved from rackspace and we need it for most requests.
+	 * This is retrieved from Rackspace and we need it for most requests.
 	 * The token should last 24 hours so it makes sense to store it.
 	 **/
 	 'auth-token' => '',
+	 
+	 /**
+	  * storage-url
+	  * This is retrieved from Rackspace after authentication.  It's the url where we can store all
+	  * our stuff!
+	  **/
+	 'storage-url' => '',
+	 
+	 /**
+	  * cdn-managment
+	  * The url used for managing the cdn.
+	  **/
+	 'cdn-managment' => '',
+	 
+	 /**
+	  * last-saved
+	  * We store the timestamp when we last retrieved the auth-token.  The token expires every 24 hours.
+	  **/
+	 'last-saved' => 0,
 	 
 );
 
