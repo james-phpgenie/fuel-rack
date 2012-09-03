@@ -4,7 +4,7 @@
  * the Rackspace Cloud Files API
  *
  * @package    Rack
- * @version    0.0.1
+ * @version    0.0.9
  * @author     James Pudney james@phpgenie.co.uk
  * @license    See LICENCE.md
  **/
