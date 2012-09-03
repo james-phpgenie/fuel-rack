@@ -54,6 +54,7 @@ class Rack
 		
 		// load the configuration
 		$config = \Config::load('rack');
+		$last_saved = \Config::get('last-saved');
 		
 		// check that we have a url to use
 		if (empty($config['api-url'])) {
@@ -89,14 +90,21 @@ class Rack
 			
 			static::$auth_user = \Config::get('auth-user');
 			static::$auth_key = \Config::get('auth-key');
-			static::$auth_token = \Config::get('auth-token');
 			
-			// check that the auth-token is valid
-			if ( ! static::is_auth_token_valid()) {
+			// check whether we need a new auth token
+			if ((\Date::forge()->get_timestamp() - $last_saved) > 86400) {
+				
 				static::$auth_token = static::get_auth_token();
+				
+			} else {
+				
+				static::$auth_token = \Config::get('auth-token');
+				
 			}
-						
+			
 		}
+		
+		static::$storage_url = \Config::get('storage-url');
 		
 	}
 	
@@ -184,14 +192,18 @@ class Rack
 		if ($response->status == 204 || $response->status == 202) {
 			// all's good in the hood
 			
-			static::$auth_token = $response->headers['X-Auth-Token'];
 			static::$storage_url = $response->headers['X-Storage-Url'];
 			static::$cdn_management = $response->headers['X-CDN-Management-Url'];
+			static::$auth_token = $response->headers['X-Auth-Token'];
 			
 			static::save_details_to_config();
+			
+			return $response->headers['X-Auth-Token'];
 		
 		} else {
+			
 			throw new \FuelException('Please chack the auth-key and auth-user supplied.');
+			
 		}
 	}
 	
@@ -202,13 +214,12 @@ class Rack
 	 * @param string $marker Returns object names greater in value than the specified marker. Only strings using UTF-8 encoding are valid.
 	 * @param string $format Specify either json or xml as the format for the returned values.  If left blank an array of strings will be returned.
 	 *
-	 * @return void
-	 * @author James Pudney
+	 * @return mixed The response depends on the format.  By default this should be an array of container objects encoded using json.  The objects consists of the following attributes: name, count, bytes.
 	 **/
 	public static function get_containers($limit = 10000, $marker = '', $format = 'json')
 	{
 		$headers = array(
-			'X-Auth-Token: '.$auth_token
+			'X-Auth-Token: '.static::$auth_token
 		);
 		
 		$params = array(
@@ -227,9 +238,9 @@ class Rack
 				'params' => $params,
 			), 
 			'GET'
-		);
+		)->execute()->response();
 		
-		return $response->execute()->body();		
+		return $response->body();		
 		
 	}
 	
@@ -247,7 +258,8 @@ class Rack
 				'api-url' => static::$api_url,
 				'auth-token' => static::$auth_token,
 				'storage-url' => static::$storage_url,
-				'cdn-managment' => static::$cdn_management,				
+				'cdn-managment' => static::$cdn_management,
+				'last-saved' => \Date::forge()->get_timestamp(),				
 			)
 		);
 		
