@@ -11,7 +11,7 @@ The `execute` function from the core `request_curl` driver has been extended.  T
 
 ### TODO:
 * Container Operations
-	*	
+	*	Create/Update, Delete
 * Object Operations
 	* Create/Update, Copy, Delete
 * CDN-Enabled Containers Operations

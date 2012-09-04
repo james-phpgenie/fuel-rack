@@ -61,7 +61,8 @@ class Rack
 		$config = \Config::load('rack');
 		$last_saved = \Config::get('last-saved');
 		
-		// check that we have a url to use
+		// before we can do anything we need to check and see if we have a 
+		// an api url
 		if (empty($config['api-url'])) {
 			
 			throw new \FuelException('No api url given.');
@@ -180,15 +181,7 @@ class Rack
 			'RETURNTRANSFER' => true,
 		);
 		
-		$request = \Request::forge($api_url, 
-			array(
-				'driver' => 'curl', 
-				'options' => $options
-			), 
-			'GET'
-		);
-		
-		$response = $request->execute()->response();
+		$response = static::request($headers, $options, $api_url, 'GET');
 		
 		$auth_token = '';
 		$storage_url = '';
@@ -231,7 +224,7 @@ class Rack
 		}
 		
 		$options['HTTPHEADER'] = $headers;
-		$options['TIMEOUT'] = 3; // timeout 3 seconds
+		// $options['TIMEOUT'] = 3; // timeout 3 seconds
 		
 		$request = \Request::forge(
 			$url, 
@@ -294,7 +287,7 @@ class Rack
 		
 		$body = $response->body();
 		
-		return ($params['format'] === '' ? explode("\n", $body, -1) : $body);	
+		return ($params['format'] === '' ? explode("\n", $body, -1) : $body);
 	}
 	
 		
@@ -329,16 +322,75 @@ class Rack
 		return $response->body();	
 	}
 	
-	
-	
-	
-	//----- CDN Operations Methods ------//
-	
 	/**
-	 * undocumented function
+	 * put_object allows the creation or updating of an object.
+	 * 
+	 * @param string container The name of the container where the object is to be created.
+	 * @param string file The location of the file.
 	 *
 	 * @return void
 	 * @author James Pudney
+	 **/
+	public static function put_object($container = '', $file = null)
+	{
+		if ($file === null) {
+			throw new \FuelException("File is null");			
+		}
+		
+		if ($container === '') {
+			throw new \FuelException("Container name empty");			
+		}
+		
+		$file_info = \File::file_info($file);
+		
+		$md5_file = md5_file($file);
+		
+		$url = static::$storage_url.'/'.$container.'/'.$file_info['basename'];
+		
+		$headers = array(
+			'X-Auth-Token: '.static::$auth_token,
+			'Content-Type: '.$file_info['mimetype'], 
+			'ETag: '.$md5_file,
+		);
+		
+		$options = array(
+			'HTTPHEADER' => $headers, 
+			'PUT' => 1, 
+			'INFILE' => fopen($file, 'rb'), 
+			'INFILESIZE' => filesize($file),
+		);
+		
+		$response = static::request($headers, $options, $url, 'PUT');
+		
+		$callCount = 0;
+		
+		if ($response->status == 401 && $callCount == 0) {
+			
+			// we' not authorised, try getting a new auth-token and try again
+			static::$auth_token = static::get_auth_token();
+			static::put_object($container, $file);
+			
+			$callCount++;
+			
+		} elseif ($response->status == 401 && $callCount > 0) {
+			
+			throw new \FuelException("We weren't authorised to place the object in the container.  We've already tried getting a new auth-token so this issue could be something else.  Try checking the container name is correct.");
+			
+		}
+		
+		return $response;
+		
+	}
+		
+	//----- CDN Operations Methods ------//
+	
+	/**
+	 * Returns an array of CDN enabled containers
+	 * 
+	 * @param int 		limit 	For an integer value n, limits the number of results to n values
+	 * @param string 	marker	Given a string value x, return object names greater in value than the specified marker. Only strings using UTF-8 encoding are valid
+	 * @param string	format	The format of the response, xml or json.  json by default
+	 * @param boolean	enabled_only	If true returns only enabled containers
 	 **/
 	public static function get_cdn_containers($limit = 10000, $marker = '', $format = 'json', $enabled_only = false)
 	{
@@ -376,7 +428,7 @@ class Rack
 				'api-url' => static::$api_url,
 				'auth-token' => static::$auth_token,
 				'storage-url' => static::$storage_url,
-				'cdn-managment' => static::$cdn_management,
+				'cdn-management' => static::$cdn_management,
 				'last-saved' => \Date::forge()->get_timestamp(),				
 			)
 		);
