@@ -87,5 +87,21 @@ class Request_Curl extends Fuel\Core\Request_Curl
 		return $this;
 		
 	}
+	
+	/**
+	 * HEAD request
+	 *
+	 * @param   array  $params
+	 * @return  void
+	 */
+	protected function method_head()
+	{
+		$params = is_array($this->params) ? $this->encode($this->params) : $this->params;
+
+		$this->set_option(CURLOPT_POSTFIELDS, $params);
+
+		// Override method, I think this makes $_POST DELETE data but... we'll see eh?
+		$this->set_header('X-HTTP-Method-Override', 'HEAD');
+	}
 }
 
