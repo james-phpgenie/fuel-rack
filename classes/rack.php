@@ -248,6 +248,8 @@ class Rack
 		
 	}
 	
+	//--------- Container Methods ----------//
+	
 	/**
 	 * Returns a list of containers.  The maximum of 10,000 container names will be returned.  Parameters are to be passed in an array.
 	 * 
@@ -381,6 +383,45 @@ class Rack
 		return $response;
 		
 	}
+	
+	/**
+	 * Deletes the given object from the given container, and returns the response.  The function can be passed delete_at or delete_after 
+	 * variables to delete the file at a particular time or after a particular number of seconds.
+	 * 
+	 * @param string	container	The name of the container where the object resides
+	 * @param	string	object	The name of the object to be deleted
+	 * @param	int	delete_at	A Unix Epoch timestamp, in integer form
+	 * @param	int	delete_after	The number of seconds to pass before deletion occurs.
+	 *
+	 * @return mixed response The response object returned
+	 * @author James Pudney
+	 **/
+	public static function delete_object($container = '', $object = '', $delete_at = 0, $delete_after = 0)
+	{
+		if ($container === '') {
+			throw new \FuelException("No container name given");			
+		}
+		
+		if ($object === '') {
+			throw new \FuelException("No object name given");			
+		}
+		
+		$headers = array(
+			'X-Auth-Token: '.static::$auth_token,
+		);
+		
+		if ($delete_at != 0) {
+			$headers[] = 'X-Delete-At: '.$delete_at;
+		}
+		
+		if ($delete_after != 0) {
+			$headers[] = 'X-Delete-After: '.$delete_after;
+		}
+		
+		$url = static::$storage_url.'/'.$container.'/'.$object;
+		
+		return static::request($headers, array(), $url, 'DELETE', array());
+	}
 		
 	//----- CDN Operations Methods ------//
 	
@@ -409,9 +450,7 @@ class Rack
 		
 		return $response->body();		
 	}
-	
-	
-	
+		
 	//------ General operations ------//
 	
 	/**
