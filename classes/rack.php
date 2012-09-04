@@ -4,7 +4,7 @@
  * the Rackspace Cloud Files API
  *
  * @package    Rack
- * @version    0.0.12
+ * @version    v0.1.1
  * @author     James Pudney james@phpgenie.co.uk
  * @license    See LICENCE.md
  **/
@@ -118,7 +118,7 @@ class Rack
 	 * A private function for checking whether the auth token
 	 * is still valid or whether it has expired.
 	 *
-	 * @return 	boolean The outcome of the check
+	 * @return	boolean The outcome of the check
 	 **/
 	private static function is_auth_token_valid()
 	{
@@ -162,7 +162,7 @@ class Rack
 	/**
 	 * Authenticates using the user credentials.
 	 * 
-	 * @return 	string 	auth_token Returns the authorisation token.
+	 * @return	string	auth_token Returns the authorisation token.
 	 **/
 	private static function get_auth_token()
 	{
@@ -208,12 +208,12 @@ class Rack
 	/**
 	 * The request function offers a helper method for the curl request.
 	 * 
-	 * @param		array		headers		The headers to be used for the curl request
-	 * @param		array		options		The options to be used for the curl request
-	 * @param		array		params		The params to be encoded in the curl request
-	 * @param		string	url				The url to be used for the request
-	 * @param		string	method		The method to be used for the curl request, GET, POST, PUT, etc.
-	 * @return	mixed		Returns the response object
+	 * @param	array		headers	The headers to be used for the curl request
+	 * @param	array		options	The options to be used for the curl request
+	 * @param	array		params	The params to be encoded in the curl request
+	 * @param	string	url	The url to be used for the request
+	 * @param	string	method	The method to be used for the curl request, GET, POST, PUT, etc.
+	 * @return	mixed	Returns the response object
 	 * @throws	MissingURLException
 	 **/
 	private static function request($headers = array(), $options = array(), $url = '', $method = 'GET', $params = array())
@@ -248,12 +248,14 @@ class Rack
 		
 	}
 	
+	//--------- Container Methods ----------//
+	
 	/**
 	 * Returns a list of containers.  The maximum of 10,000 container names will be returned.  Parameters are to be passed in an array.
 	 * 
-	 * @param 	int 		limit 		Limits the number of containers returned.
-	 * @param 	string 	marker 		Returns object names greater in value than the specified marker. Only strings using UTF-8 encoding are valid.
-	 * @param 	string 	format 		Specify either json or xml as the format for the returned values.  If left blank an array of strings will be returned.
+	 * @param	int	limit	Limits the number of containers returned.
+	 * @param	string	marker	Returns object names greater in value than the specified marker. Only strings using UTF-8 encoding are valid.
+	 * @param	string	format	Specify either json or xml as the format for the returned values.  If left blank an array of strings will be returned.
 	 * @return mixed The response depends on the format.  By default this should be an array of container objects encoded using json.  The objects consists of the following attributes: name, count, bytes.
 	 **/
 	public static function get_containers($params = array('limit' => 10000, 'marker' => '', 'format' => ''))
@@ -273,7 +275,7 @@ class Rack
 	/**
 	 * Returns a list of objects for a container.  Parameters are to be passed in an array.
 	 *
-	 * @return 	mixed 	The response body is returned.  The format of which depends on the format given.  If none then the reponse is json encoded by default.
+	 * @return	mixed	The response body is returned.  The format of which depends on the format given.  If none then the reponse is json encoded by default.
 	 **/
 	public static function get_objects_list($container = '', $params = array('limit' => 10000, 'marker' => '', 'prefix' => '', 'format' => '', 'path' => '', 'deliminator' => ''))
 	{
@@ -296,9 +298,9 @@ class Rack
 	/**
 	 * get_object allows you to retrieve an object from a container.
 	 * 
-	 * @param		string		container		The name of the container where the object is being stored
-	 * @param		string		object			The name of the object to retrieve
-	 * @param		array			conditions	Headers for conditional Get Requests. If-Match, If-None-Match, etc.
+	 * @param	string	container	The name of the container where the object is being stored
+	 * @param	string	object	The name of the object to retrieve
+	 * @param	array	conditions	Headers for conditional Get Requests. If-Match, If-None-Match, etc.
 	 *
 	 * @return void
 	 * @author James Pudney
@@ -381,14 +383,53 @@ class Rack
 		return $response;
 		
 	}
+	
+	/**
+	 * Deletes the given object from the given container, and returns the response.  The function can be passed delete_at or delete_after 
+	 * variables to delete the file at a particular time or after a particular number of seconds.
+	 * 
+	 * @param string	container	The name of the container where the object resides
+	 * @param	string	object	The name of the object to be deleted
+	 * @param	int	delete_at	A Unix Epoch timestamp, in integer form
+	 * @param	int	delete_after	The number of seconds to pass before deletion occurs.
+	 *
+	 * @return mixed response The response object returned
+	 * @author James Pudney
+	 **/
+	public static function delete_object($container = '', $object = '', $delete_at = 0, $delete_after = 0)
+	{
+		if ($container === '') {
+			throw new \FuelException("No container name given");			
+		}
+		
+		if ($object === '') {
+			throw new \FuelException("No object name given");			
+		}
+		
+		$headers = array(
+			'X-Auth-Token: '.static::$auth_token,
+		);
+		
+		if ($delete_at != 0) {
+			$headers[] = 'X-Delete-At: '.$delete_at;
+		}
+		
+		if ($delete_after != 0) {
+			$headers[] = 'X-Delete-After: '.$delete_after;
+		}
+		
+		$url = static::$storage_url.'/'.$container.'/'.$object;
+		
+		return static::request($headers, array(), $url, 'DELETE', array());
+	}
 		
 	//----- CDN Operations Methods ------//
 	
 	/**
 	 * Returns an array of CDN enabled containers
 	 * 
-	 * @param int 		limit 	For an integer value n, limits the number of results to n values
-	 * @param string 	marker	Given a string value x, return object names greater in value than the specified marker. Only strings using UTF-8 encoding are valid
+	 * @param int	limit	For an integer value n, limits the number of results to n values
+	 * @param string	marker	Given a string value x, return object names greater in value than the specified marker. Only strings using UTF-8 encoding are valid
 	 * @param string	format	The format of the response, xml or json.  json by default
 	 * @param boolean	enabled_only	If true returns only enabled containers
 	 **/
@@ -409,9 +450,7 @@ class Rack
 		
 		return $response->body();		
 	}
-	
-	
-	
+		
 	//------ General operations ------//
 	
 	/**
