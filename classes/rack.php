@@ -4,7 +4,7 @@
  * the Rackspace Cloud Files API
  *
  * @package    Rack
- * @version    v0.1.1
+ * @version    v0.2.1
  * @author     James Pudney james@phpgenie.co.uk
  * @license    See LICENCE.md
  **/
@@ -237,7 +237,7 @@ class Rack
 		);
 		
 		try {
-			
+			var_dump($request);
 			$request->execute();
 			
 		} catch (Exception $e) {
@@ -450,7 +450,30 @@ class Rack
 		
 		return $response->body();		
 	}
+	
+	/**
+	 * Returns meta data in an array for a given container
+	 *
+	 * @param string container The name of the container to retrieve meta data 
+	 * @return mixed
+	 **/
+	public static function head_cdn_container_meta($container = '')
+	{
+		$headers = array(
+			'X-Auth-Token: '.static::$auth_token,
+		);
 		
+		$options = array(
+			'HEADER' => true, // we want to include the header in the ouput
+		);
+		
+		$url = static::$cdn_management.'/'.$container;
+		
+		$response = static::request($headers, $options, $url, 'HEAD', array());
+		
+		return $response;
+	}
+	
 	//------ General operations ------//
 	
 	/**
