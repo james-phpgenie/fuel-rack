@@ -1,7 +1,7 @@
 Rack
 ====
 
-**Version:** v0.0.11
+**Version:** v0.0.12
 
 Rack is a FuelPHP package to allow you to interact with Rackspaces api.
 
@@ -12,15 +12,28 @@ The `execute` function from the core `request_curl` driver has been extended.  T
 ### TODO:
 * Container Operations
 	*	Create/Update, Delete
+	* Retrieve Container Metadata
+	* Create/Update Container Metadata
 * Object Operations
-	* Create/Update, Copy, Delete
+	* Copy, Delete
+	* Retrieve Object Metadata
+	* Update Object Metadata
 * CDN-Enabled Containers Operations
+	* CDN-Enable a Container
+	* List CDN-Enabled Container's Metadata
+	* Purge CDN-Enabled Containers
+	* Update CDN-Enabled Container Metadata
+* CDN Object Services
+	* Purge CDN-Enabled Objects
 
 ### Done:
+* Authentication
 * Container Operations
-	*	List Containers
-	* List Container Objects
+	*	List Containers and Serialized List Output
+	* List Objects in a Container and Serialized List Output
 * Object Operations
+	* Create/Update Object
 	* Retrieve Object
 * CDN-Enabled Containers Operations
+	* List Containers
 
