@@ -237,7 +237,7 @@ class Rack
 		);
 		
 		try {
-			var_dump($request);
+			
 			$request->execute();
 			
 		} catch (Exception $e) {
