@@ -4,7 +4,7 @@
  * the Rackspace Cloud Files API
  *
  * @package    Rack
- * @version    v0.2.1
+ * @version    v0.2.2
  * @author     James Pudney james@phpgenie.co.uk
  * @license    See LICENCE.md
  **/
@@ -237,7 +237,7 @@ class Rack
 		);
 		
 		try {
-			var_dump($request);
+			
 			$request->execute();
 			
 		} catch (Exception $e) {
