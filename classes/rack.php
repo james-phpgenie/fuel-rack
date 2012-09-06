@@ -4,7 +4,7 @@
  * the Rackspace Cloud Files API
  *
  * @package    Rack
- * @version    v0.2.2
+ * @version    v0.2.3
  * @author     James Pudney james@phpgenie.co.uk
  * @license    See LICENCE.md
  **/
@@ -140,15 +140,7 @@ class Rack
 			'RETURNTRANSFER' => true,
 		);
 		
-		$request = \Request::forge($api_url, 
-			array(
-				'driver' => 'curl', 
-				'options' => $options
-			), 
-			'GET'
-		);
-		
-		$response = $request->execute()->response();
+		$response = static::request($headers, $options, $api_url = '', 'GET', array());
 		
 		if ($response->headers['X-Auth-Token'] === \Config::get('auth-token')) {
 			// we have a match
@@ -491,7 +483,7 @@ class Rack
 				'auth-token' => static::$auth_token,
 				'storage-url' => static::$storage_url,
 				'cdn-management' => static::$cdn_management,
-				'last-saved' => \Date::forge()->get_timestamp(),				
+				'last-saved' => \Date::create_from_string(\Date::forge()->format('%d/%m/%Y'), "eu")->get_timestamp(), // save the date as midnight			
 			)
 		);
 		
