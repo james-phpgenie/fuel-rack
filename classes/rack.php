@@ -300,6 +300,39 @@ class Rack
 	}
 	
 	/**
+	 * Deletes a container with the given name.  The container must be empty before it can be deleted.
+	 *
+	 * @param string container The name of the container to delete.
+	 * @return boolean If it was successfully deleted then true, otherwise false.
+	 **/
+	public static function delete_container($container = '')
+	{
+		if ($container == '') {
+			return false;
+		}
+		
+		$headers = array(
+			'X-Auth-Token: '.static::$auth_token
+		);
+		
+		$options = array(
+			'HTTPHEADER' => $headers, 
+		);
+		
+		$url = static::$storage_url.'/'.$container;
+		
+		$response = static::request($headers, $options, $url, 'DELETE', array());
+		
+		$status = $response->status;
+		
+		if ($status == 204) {
+			return true;
+		} 
+		
+		return false;
+	}
+	
+	/**
 	 * Returns a list of objects for a container.  Parameters are to be passed in an array.
 	 *
 	 * @return	mixed	The response body is returned.  The format of which depends on the format given.  If none then the reponse is json encoded by default.
