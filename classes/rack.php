@@ -265,6 +265,41 @@ class Rack
 	}
 	
 	/**
+	 * Creates a container using the name provided.  The name can't contain any slashes ('/').
+	 *
+	 * @param string container The name of the container that you wish to create.
+	 * @return boolean result The result of creating the container.  If successful true, otherwise false.
+	 **/
+	public static function put_container($container = '')
+	{
+		if ($container == '') {
+			return false;
+		}
+		
+		$headers = array(
+			'X-Auth-Token: '.static::$auth_token
+		);
+		
+		$options = array(
+			'HTTPHEADER' => $headers, 
+			'PUT' => 1, 
+		);
+		
+		$url = static::$storage_url.'/'.$container;
+		
+		$response = static::request($headers, $options, $url, 'PUT', array());
+		
+		$status = $response->status;
+		
+		if ($status == 201 || $status == 202) {
+			return true;
+		} 
+		
+		return false;
+		
+	}
+	
+	/**
 	 * Returns a list of objects for a container.  Parameters are to be passed in an array.
 	 *
 	 * @return	mixed	The response body is returned.  The format of which depends on the format given.  If none then the reponse is json encoded by default.
