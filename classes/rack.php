@@ -389,11 +389,12 @@ class Rack
 	 * 
 	 * @param string container The name of the container where the object is to be created.
 	 * @param string file The location of the file.
+	 * @param string filename The filename to use instead of the default basename of the file.
 	 *
 	 * @return void
 	 * @author James Pudney
 	 **/
-	public static function put_object($container = '', $file = null)
+	public static function put_object($container = '', $file = null, $filename = '')
 	{
 		if ($file === null) {
 			throw new \FuelException("File is null");			
@@ -407,7 +408,12 @@ class Rack
 		
 		$md5_file = md5_file($file);
 		
-		$url = static::$storage_url.'/'.$container.'/'.$file_info['basename'];
+		if ($filename !== '') {
+			// we have a filename to use
+			$url = static::$storage_url.'/'.$container.'/'.$filename;
+		} else {
+			$url = static::$storage_url.'/'.$container.'/'.$file_info['basename'];
+		}
 		
 		$headers = array(
 			'X-Auth-Token: '.static::$auth_token,
