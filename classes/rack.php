@@ -233,7 +233,15 @@ class Rack
 			$request->execute();
 			
 		} catch (Exception $e) {
-			
+			\Log::info("An exception occurred whilst processing a request in RACK.", __METHOD__);
+			\Log::debug(sprintf("\nheaders: %s\nparams: %s\nmethod: %s\noptions: %s\nurl: %s\n",
+				json_encode($headers),
+				json_encode($params),
+				json_encode($method),
+				json_encode($options),
+				json_encode($url))
+			);
+			\Log::error($e->Message(), __METHOD__);
 		}
 		
 		return $request->response();
